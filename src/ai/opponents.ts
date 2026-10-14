@@ -129,7 +129,7 @@ export function modelOpponent(st: HandState, s: Seat): OpponentModel {
   const openMelds = p.melds.filter(m => m.type !== 'ankan').length;
   const tenpai = tenpaiEstimate(p.discards.length, openMelds, p.riichi);
   const bias = suitBias(st, s);
-  if (bias[9] !== 1 || bias[18] !== 1) notes.push('flush suspected');
+  if (bias[9] !== 1 || bias[18] !== 1) notes.push('染め手の気配');
   const early = new Set<Kind>();
   p.discards.slice(0, 5).forEach(d => early.add(kindOf(d.tile)));
   const waitProb = waitDistribution(unseen, safe, bias, p.riichi ? early : new Set());
@@ -154,7 +154,7 @@ export function modelOpponent(st: HandState, s: Seat): OpponentModel {
   else if (openMelds === 0) han = 1.6 + 0.9 + visDora;
   else han = Math.max(1, yakuHan) + 0.6 + 0.5 + visDora;
   if (bias[9] !== 1 || bias[18] !== 1) han += 2;
-  if (visDora >= 2) notes.push(`visible dora ${visDora}`);
+  if (visDora >= 2) notes.push(`見えているドラ${visDora}枚`);
   const ronValue = handValueFromHan(han, dealer);
   // tsumo loss: non-dealer tsumo ≈ 3/4 of ron value, dealer tsumo ≈ 2/3
   const tsumoValue = ronValue * (dealer ? 0.67 : 0.75);

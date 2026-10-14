@@ -51,7 +51,7 @@ describe('match ending', () => {
     expect(s.ended).toBe(false); // exactly ... 3000-2000=1000
     const b = settleHand(m0({ scores: [1000, 35000, 35000] }), { kind: 'ron', loser: 0, winners: [{ seat: 1, han: 2, fu: 30 }] });
     expect(b.ended).toBe(true);
-    expect(b.reason).toBe('Bankruptcy');
+    expect(b.reason).toBe('トビ終了');
     const z = settleHand(m0({ scores: [2000, 35000, 35000] }), { kind: 'ron', loser: 0, winners: [{ seat: 1, han: 2, fu: 30 }] });
     expect(z.ended).toBe(false);
   });

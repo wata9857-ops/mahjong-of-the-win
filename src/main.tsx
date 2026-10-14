@@ -1,6 +1,11 @@
 import { render } from 'preact';
 import { App } from './ui/App';
+import { load } from './ui/store';
+import { applyTheme } from './ui/theme';
 import './styles.css';
+
+// Apply the saved theme before the first paint to avoid a flash.
+applyTheme(load().settings.theme);
 
 render(<App />, document.getElementById('app')!);
 

@@ -17,11 +17,11 @@ export class EngineClient {
     w.onmessage = (e: MessageEvent<Analysis & { error?: string }>) => {
       const a = e.data;
       if (a.id !== this.latest) return;
-      if (a.error) { this.busy = false; this.onError(a.error); return; }
+      if (a.error) { this.busy = false; this.onError('解析中にエラーが発生しました。直前の入力を戻して確認してください。'); return; }
       if (a.stage === 'final') this.busy = false;
       this.onResult(a);
     };
-    w.onerror = ev => { this.busy = false; this.onError(ev.message || 'engine error'); };
+    w.onerror = ev => { this.busy = false; this.onError('解析エンジンでエラーが発生しました。もう一度入力するか、ページを再読み込みしてください。'); };
     return w;
   }
 

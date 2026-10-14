@@ -2,11 +2,13 @@ import { useState } from 'preact/hooks';
 import { finalPoints, newMatch, rankSeats, roundLabel, settleHand, type HandResult, type Settlement, type WinEntry } from '../game/match';
 import { SEAT_SHORT, type MatchInfo, type Seat } from '../game/types';
 
-const WINDS = ['East', 'South', 'West'];
+const WINDS = ['東', '南', '西'];
 
 export function seatWindName(m: MatchInfo, s: Seat): string {
   return WINDS[(s - m.dealer + 3) % 3];
 }
+
+const fmt = (n: number) => n.toLocaleString('ja-JP');
 
 // ---------------------------------------------------------------- setup
 
@@ -23,45 +25,45 @@ export function SetupDialog({ match, onStart, onCancel }: { match: MatchInfo; on
   return (
     <div class="modal">
       <div class="dialog">
-        <h2>Hand setup</h2>
+        <h2>対局設定</h2>
         <div class="row">
-          <label>Dealer (East)</label>
+          <label>親（東家）</label>
           <div class="seg">
             {([0, 1, 2] as Seat[]).map(s => <button class={dealer === s ? 'on' : ''} onClick={() => setDealer(s)}>{SEAT_SHORT[s]}</button>)}
           </div>
         </div>
         <div class="row">
-          <label>Round</label>
+          <label>局</label>
           <div class="seg">
-            <button class={wind === 0 ? 'on' : ''} onClick={() => setWind(0)}>East</button>
-            <button class={wind === 1 ? 'on' : ''} onClick={() => setWind(1)}>South (extension)</button>
+            <button class={wind === 0 ? 'on' : ''} onClick={() => setWind(0)}>東場</button>
+            <button class={wind === 1 ? 'on' : ''} onClick={() => setWind(1)}>南場（延長）</button>
           </div>
           <div class="seg">
-            {([1, 2, 3] as const).map(n => <button class={hand === n ? 'on' : ''} onClick={() => setHand(n)}>{n}</button>)}
+            {([1, 2, 3] as const).map(n => <button class={hand === n ? 'on' : ''} onClick={() => setHand(n)}>{n}局</button>)}
           </div>
         </div>
         <div class="row">
-          <label>Honba</label>
+          <label>本場</label>
           <Stepper v={honba} set={setHonba} />
-          <label>Deposits</label>
+          <label class="short">供託</label>
           <Stepper v={kyotaku} set={setKyotaku} />
         </div>
         {([0, 1, 2] as Seat[]).map(s => (
           <div class="row">
-            <label>{SEAT_SHORT[s]} ({WINDS[(s - dealer + 3) % 3]})</label>
-            <input type="number" inputMode="numeric" step={100} value={scores[s]} onInput={e => setScore(s, +(e.target as HTMLInputElement).value)} />
+            <label>{SEAT_SHORT[s]}（{WINDS[(s - dealer + 3) % 3]}家）</label>
+            <input type="number" inputMode="numeric" step={100} value={scores[s]} aria-label={`${SEAT_SHORT[s]}の持ち点`} onInput={e => setScore(s, +(e.target as HTMLInputElement).value)} />
             <div class="seg small">
-              {[-1000, -100, 100, 1000].map(d => <button onClick={() => setScore(s, scores[s] + d)}>{d > 0 ? '+' : ''}{d}</button>)}
+              {[-1000, -100, 100, 1000].map(d => <button onClick={() => setScore(s, scores[s] + d)}>{d > 0 ? '+' : '−'}{fmt(Math.abs(d))}</button>)}
             </div>
           </div>
         ))}
-        <p class={total === 105000 ? 'muted' : 'warn'}>Total incl. deposits: {total} {total !== 105000 && '(expected 105000)'}</p>
+        <p class={total === 105000 ? 'muted' : 'warn'}>合計（供託込み）：{fmt(total)}点{total !== 105000 && '（本来は105,000点）'}</p>
         <div class="row end">
-          {onCancel && <button class="btn" onClick={onCancel}>Cancel</button>}
-          <button class="btn" onClick={() => { const m = newMatch(0); setScores(m.scores); setHonba(0); setKyotaku(0); setWind(0); setHand(1); }}>Reset to 35000</button>
-          <button class="btn primary" onClick={() => onStart({ roundWind: wind, handNumber: hand, honba, kyotaku, dealer, initialDealer, scores })}>Start hand</button>
+          {onCancel && <button class="btn" onClick={onCancel}>キャンセル</button>}
+          <button class="btn" onClick={() => { const m = newMatch(0); setScores(m.scores); setHonba(0); setKyotaku(0); setWind(0); setHand(1); }}>35,000点に戻す</button>
+          <button class="btn primary" onClick={() => onStart({ roundWind: wind, handNumber: hand, honba, kyotaku, dealer, initialDealer, scores })}>この局を開始</button>
         </div>
-        <p class="muted">Then tap the dora indicator, then your 13 tiles.</p>
+        <p class="muted">開始後、ドラ表示牌 → 配牌13枚の順にタップしてください。</p>
       </div>
     </div>
   );
@@ -89,20 +91,22 @@ export interface EndPreset {
 }
 
 const HAN_OPTS: { label: string; han: number; yakuman?: number }[] = [
-  { label: '1', han: 1 }, { label: '2', han: 2 }, { label: '3', han: 3 }, { label: '4', han: 4 },
-  { label: 'Mangan', han: 5 }, { label: 'Haneman', han: 6 }, { label: 'Baiman', han: 8 },
-  { label: 'Sanbai', han: 11 }, { label: 'Yakuman', han: 13, yakuman: 1 }, { label: '2× Yakuman', han: 26, yakuman: 2 },
+  { label: '1翻', han: 1 }, { label: '2翻', han: 2 }, { label: '3翻', han: 3 }, { label: '4翻', han: 4 },
+  { label: '満貫', han: 5 }, { label: '跳満', han: 6 }, { label: '倍満', han: 8 },
+  { label: '三倍満', han: 11 }, { label: '役満', han: 13, yakuman: 1 }, { label: 'ダブル役満', han: 26, yakuman: 2 },
 ];
 const FU_OPTS = [20, 25, 30, 40, 50, 60, 70, 80, 90, 100, 110];
 
 /** The han button that represents a value (limit hands map to their limit button). */
 function activeHanLabel(v: { han: number; yakuman: number }): string {
   if (v.yakuman) return HAN_OPTS.find(o => o.yakuman === Math.min(2, v.yakuman))!.label;
-  if (v.han >= 13) return 'Yakuman';
-  let label = '1';
+  if (v.han >= 13) return '役満';
+  let label = '1翻';
   for (const o of HAN_OPTS) if (!o.yakuman && v.han >= o.han) label = o.label;
   return label;
 }
+
+const KIND_LABEL = { ron: 'ロン', tsumo: 'ツモ', draw: '流局（荒牌）', abort: '途中流局' } as const;
 
 export function EndDialog({ match, preset, onApply, onCancel }: {
   match: MatchInfo; preset: EndPreset; onApply: (r: HandResult, s: Settlement) => void; onCancel: () => void;
@@ -135,41 +139,42 @@ export function EndDialog({ match, preset, onApply, onCancel }: {
   return (
     <div class="modal">
       <div class="dialog">
-        <h2>End of hand — {roundLabel(match)}</h2>
+        <h2>局の終了 — {roundLabel(match)}</h2>
         <div class="seg">
-          {(['ron', 'tsumo', 'draw', 'abort'] as const).map(k => <button class={kind === k ? 'on' : ''} onClick={() => setKind(k)}>{k === 'draw' ? 'Exhaustive draw' : k === 'abort' ? 'Abortive draw' : k[0].toUpperCase() + k.slice(1)}</button>)}
+          {(['ron', 'tsumo', 'draw', 'abort'] as const).map(k => <button class={kind === k ? 'on' : ''} onClick={() => setKind(k)}>{KIND_LABEL[k]}</button>)}
         </div>
         {(kind === 'ron' || kind === 'tsumo') && <>
           <div class="row">
-            <label>Winner{kind === 'ron' ? '(s)' : ''}</label>
+            <label>和了者{kind === 'ron' ? '（ダブロン可）' : ''}</label>
             <div class="seg">{([0, 1, 2] as Seat[]).map(s => <button class={winners.includes(s) ? 'on' : ''} onClick={() => toggleWinner(s)}>{SEAT_SHORT[s]}</button>)}</div>
           </div>
           {kind === 'ron' && <div class="row">
-            <label>Dealt in</label>
+            <label>放銃者</label>
             <div class="seg">{([0, 1, 2] as Seat[]).map(s => <button class={loser === s ? 'on bad' : ''} onClick={() => setLoser(s)}>{SEAT_SHORT[s]}</button>)}</div>
           </div>}
           {(kind === 'ron' ? winners.filter(w => w !== loser) : winners.slice(0, 1)).map(w => (
             <div class="winbox">
-              <b>{SEAT_SHORT[w]}</b>{w === 0 && preset.mine && <span class="muted"> engine: {preset.mine.text}</span>}
+              <b>{SEAT_SHORT[w]}の打点</b>{w === 0 && preset.mine && <span class="muted">（自動計算：{preset.mine.text}）</span>}
               <div class="seg wrap">{HAN_OPTS.map(o => (
                 <button class={activeHanLabel(vals[w]) === o.label ? 'on' : ''}
                   onClick={() => setVal(w, { han: o.han, yakuman: o.yakuman ?? 0 })}>{o.label}</button>
               ))}</div>
-              {vals[w].yakuman === 0 && vals[w].han < 5 && <div class="seg wrap">{FU_OPTS.map(f => <button class={vals[w].fu === f ? 'on' : ''} onClick={() => setVal(w, { fu: f })}>{f}</button>)}</div>}
+              {vals[w].yakuman === 0 && vals[w].han < 5 && <div class="seg wrap">{FU_OPTS.map(f => <button class={vals[w].fu === f ? 'on' : ''} onClick={() => setVal(w, { fu: f })}>{f}符</button>)}</div>}
             </div>
           ))}
         </>}
         {kind === 'draw' && <div class="row">
-          <label>Tenpai</label>
+          <label>聴牌者</label>
           <div class="seg">{([0, 1, 2] as Seat[]).map(s => <button class={tenpai[s] ? 'on' : ''} onClick={() => { const t = [...tenpai] as [boolean, boolean, boolean]; t[s] = !t[s]; setTenpai(t); }}>{SEAT_SHORT[s]}</button>)}</div>
         </div>}
+        {kind === 'abort' && <p class="muted">九種九牌・四槓散了など。親の連荘となり、精算はありません。</p>}
         {settlement && <div class="summary">
-          {([0, 1, 2] as Seat[]).map(s => <div><span>{SEAT_SHORT[s]}</span> <b class={settlement.deltas[s] > 0 ? 'pos' : settlement.deltas[s] < 0 ? 'neg' : ''}>{settlement.deltas[s] > 0 ? '+' : ''}{settlement.deltas[s]}</b> → {match.scores[s] + settlement.deltas[s]}</div>)}
-          <div class="muted">{settlement.reason}{settlement.ended ? ' — MATCH ENDS' : ` → next: ${roundLabel(settlement.next)}, ${settlement.next.honba} honba`}</div>
+          {([0, 1, 2] as Seat[]).map(s => <div><span>{SEAT_SHORT[s]}</span> <b class={settlement.deltas[s] > 0 ? 'pos' : settlement.deltas[s] < 0 ? 'neg' : ''}>{settlement.deltas[s] > 0 ? '+' : ''}{fmt(settlement.deltas[s])}</b> → {fmt(match.scores[s] + settlement.deltas[s])}点</div>)}
+          <div class="muted">{settlement.reason}{settlement.ended ? ' — 終局' : `（次：${roundLabel(settlement.next)} ${settlement.next.honba}本場）`}</div>
         </div>}
         <div class="row end">
-          <button class="btn" onClick={onCancel}>Cancel</button>
-          <button class="btn primary" disabled={!settlement} onClick={() => settlement && onApply(result, settlement)}>Apply</button>
+          <button class="btn" onClick={onCancel}>キャンセル</button>
+          <button class="btn primary" disabled={!settlement} onClick={() => settlement && onApply(result, settlement)}>確定</button>
         </div>
       </div>
     </div>
@@ -182,10 +187,10 @@ export function FinalDialog({ s, onNew }: { s: Settlement; onNew: () => void }) 
   return (
     <div class="modal">
       <div class="dialog">
-        <h2>{ranks[0] === 0 ? '🏆 You win the match! Pon intended.' : 'Match over'}</h2>
+        <h2>{ranks[0] === 0 ? '🏆 トップ獲得！ おめでとうございます！' : '対局終了'}</h2>
         <p class="muted">{s.reason}</p>
-        {ranks.map((seat, i) => <div class="final-row"><b>{i + 1}.</b> {SEAT_SHORT[seat]} — {final[seat]} ({pts[seat] > 0 ? '+' : ''}{pts[seat].toFixed(1)})</div>)}
-        <div class="row end"><button class="btn primary" onClick={onNew}>New match</button></div>
+        {ranks.map((seat, i) => <div class="final-row"><b>{i + 1}位</b> {SEAT_SHORT[seat]} — {fmt(final[seat])}点（{pts[seat] > 0 ? '+' : ''}{pts[seat].toFixed(1)}）</div>)}
+        <div class="row end"><button class="btn primary" onClick={onNew}>新しい対局</button></div>
       </div>
     </div>
   );

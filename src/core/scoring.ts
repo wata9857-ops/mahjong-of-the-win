@@ -79,13 +79,13 @@ export interface ScoreResult {
 const ceil100 = (x: number) => Math.ceil(x / 100) * 100;
 
 export function basePoints(han: number, fu: number, yakuman: number): { base: number; limitName: string } {
-  if (yakuman > 0) return { base: 8000 * yakuman, limitName: yakuman > 1 ? `${yakuman}x Yakuman` : 'Yakuman' };
-  if (han >= 13) return { base: 8000, limitName: 'Kazoe Yakuman' };
-  if (han >= 11) return { base: 6000, limitName: 'Sanbaiman' };
-  if (han >= 8) return { base: 4000, limitName: 'Baiman' };
-  if (han >= 6) return { base: 3000, limitName: 'Haneman' };
+  if (yakuman > 0) return { base: 8000 * yakuman, limitName: yakuman > 1 ? `${yakuman}倍役満` : '役満' };
+  if (han >= 13) return { base: 8000, limitName: '数え役満' };
+  if (han >= 11) return { base: 6000, limitName: '三倍満' };
+  if (han >= 8) return { base: 4000, limitName: '倍満' };
+  if (han >= 6) return { base: 3000, limitName: '跳満' };
   const b = fu * Math.pow(2, han + 2);
-  if (han >= 5 || b >= 2000) return { base: 2000, limitName: 'Mangan' };
+  if (han >= 5 || b >= 2000) return { base: 2000, limitName: '満貫' };
   return { base: b, limitName: '' };
 }
 
@@ -145,20 +145,20 @@ function yakuhaiCount(k: number, seatWind: number, roundWind: number): number {
 interface Candidate { yaku: YakuItem[]; han: number; fu: number; yakuman: number }
 
 function situationalYaku(ctx: WinContext, closedHand: boolean, out: YakuItem[]): void {
-  if (ctx.doubleRiichi) out.push({ name: 'Double Riichi', han: 2 });
-  else if (ctx.riichi) out.push({ name: 'Riichi', han: 1 });
-  if (ctx.ippatsu && (ctx.riichi || ctx.doubleRiichi)) out.push({ name: 'Ippatsu', han: 1 });
-  if (closedHand && ctx.tsumo) out.push({ name: 'Menzen Tsumo', han: 1 });
-  if (ctx.haitei && ctx.tsumo && !ctx.rinshan) out.push({ name: 'Haitei', han: 1 });
-  if (ctx.houtei && !ctx.tsumo) out.push({ name: 'Houtei', han: 1 });
-  if (ctx.rinshan && ctx.tsumo) out.push({ name: 'Rinshan Kaihou', han: 1 });
-  if (ctx.chankan && !ctx.tsumo) out.push({ name: 'Chankan', han: 1 });
+  if (ctx.doubleRiichi) out.push({ name: 'ダブルリーチ', han: 2 });
+  else if (ctx.riichi) out.push({ name: 'リーチ', han: 1 });
+  if (ctx.ippatsu && (ctx.riichi || ctx.doubleRiichi)) out.push({ name: '一発', han: 1 });
+  if (closedHand && ctx.tsumo) out.push({ name: '門前清自摸和', han: 1 });
+  if (ctx.haitei && ctx.tsumo && !ctx.rinshan) out.push({ name: '海底摸月', han: 1 });
+  if (ctx.houtei && !ctx.tsumo) out.push({ name: '河底撈魚', han: 1 });
+  if (ctx.rinshan && ctx.tsumo) out.push({ name: '嶺上開花', han: 1 });
+  if (ctx.chankan && !ctx.tsumo) out.push({ name: '槍槓', han: 1 });
 }
 
 function situationalYakuman(ctx: WinContext): YakuItem[] {
   const y: YakuItem[] = [];
-  if (ctx.tenhou) y.push({ name: 'Tenhou', han: 1, yakuman: true });
-  if (ctx.chiihou) y.push({ name: 'Chiihou', han: 1, yakuman: true });
+  if (ctx.tenhou) y.push({ name: '天和', han: 1, yakuman: true });
+  if (ctx.chiihou) y.push({ name: '地和', han: 1, yakuman: true });
   return y;
 }
 
@@ -176,8 +176,8 @@ function colorYaku(all: number[], closedHand: boolean, out: YakuItem[]): void {
     if (k >= 27) honors = true; else suits.add(suitOf(k));
   }
   if (suits.size === 1) {
-    if (honors) out.push({ name: 'Honitsu', han: closedHand ? 3 : 2 });
-    else out.push({ name: 'Chinitsu', han: closedHand ? 6 : 5 });
+    if (honors) out.push({ name: '混一色', han: closedHand ? 3 : 2 });
+    else out.push({ name: '清一色', han: closedHand ? 6 : 5 });
   }
 }
 
@@ -215,12 +215,12 @@ function evalRegular(ctx: WinContext, d: Decomposition, winIdx: number, closedHa
   const pair = d.pair;
 
   // --- yakuman ---
-  if (ankou === 4) yakuman.push(wait === 'tanki' ? { name: 'Suuankou Tanki', han: 2, yakuman: true } : { name: 'Suuankou', han: 1, yakuman: true });
+  if (ankou === 4) yakuman.push(wait === 'tanki' ? { name: '四暗刻単騎', han: 2, yakuman: true } : { name: '四暗刻', han: 1, yakuman: true });
   const dragonTris = tris.filter(s => isDragon(s.tile)).length;
-  if (dragonTris === 3) yakuman.push({ name: 'Daisangen', han: 1, yakuman: true });
+  if (dragonTris === 3) yakuman.push({ name: '大三元', han: 1, yakuman: true });
   const windTris = tris.filter(s => s.tile >= EAST && s.tile <= NORTH).length;
-  if (windTris === 4) yakuman.push({ name: 'Daisuushii', han: 2, yakuman: true });
-  else if (windTris === 3 && pair >= EAST && pair <= NORTH) yakuman.push({ name: 'Shousuushii', han: 1, yakuman: true });
+  if (windTris === 4) yakuman.push({ name: '大四喜', han: 2, yakuman: true });
+  else if (windTris === 3 && pair >= EAST && pair <= NORTH) yakuman.push({ name: '小四喜', han: 1, yakuman: true });
   let allHonor = true, allTerm = true, allGreen = true;
   for (let k = 0; k < 34; k++) {
     if (!all[k]) continue;
@@ -228,10 +228,10 @@ function evalRegular(ctx: WinContext, d: Decomposition, winIdx: number, closedHa
     if (!isTerminal(k)) allTerm = false;
     if (!isGreen(k)) allGreen = false;
   }
-  if (allHonor) yakuman.push({ name: 'Tsuuiisou', han: 1, yakuman: true });
-  if (allTerm) yakuman.push({ name: 'Chinroutou', han: 1, yakuman: true });
-  if (allGreen) yakuman.push({ name: 'Ryuuiisou', han: 1, yakuman: true });
-  if (kans === 4) yakuman.push({ name: 'Suukantsu', han: 1, yakuman: true });
+  if (allHonor) yakuman.push({ name: '字一色', han: 1, yakuman: true });
+  if (allTerm) yakuman.push({ name: '清老頭', han: 1, yakuman: true });
+  if (allGreen) yakuman.push({ name: '緑一色', han: 1, yakuman: true });
+  if (kans === 4) yakuman.push({ name: '四槓子', han: 1, yakuman: true });
   if (closedHand && ctx.melds.length === 0) {
     const ch = chuuren(ctx.closed, ctx.winTile);
     if (ch) yakuman.push(ch);
@@ -245,11 +245,11 @@ function evalRegular(ctx: WinContext, d: Decomposition, winIdx: number, closedHa
   situationalYaku(ctx, closedHand, yaku);
 
   const isPinfuShape = closedHand && tris.length === 0 && yakuhaiCount(pair, ctx.seatWind, ctx.roundWind) === 0 && wait === 'ryanmen';
-  if (isPinfuShape) yaku.push({ name: 'Pinfu', han: 1 });
+  if (isPinfuShape) yaku.push({ name: '平和', han: 1 });
 
   let tanyao = true;
   for (let k = 0; k < 34; k++) if (all[k] && isYaochu(k)) { tanyao = false; break; }
-  if (tanyao) yaku.push({ name: 'Tanyao', han: 1 });
+  if (tanyao) yaku.push({ name: '断幺九', han: 1 });
 
   if (closedHand) {
     const seqKeys = seqs.map(s => s.tile).sort((a, b) => a - b);
@@ -257,44 +257,44 @@ function evalRegular(ctx: WinContext, d: Decomposition, winIdx: number, closedHa
     const cnt = new Map<number, number>();
     for (const k of seqKeys) cnt.set(k, (cnt.get(k) ?? 0) + 1);
     for (const v of cnt.values()) dup += Math.floor(v / 2);
-    if (dup >= 2) yaku.push({ name: 'Ryanpeikou', han: 3 });
-    else if (dup === 1) yaku.push({ name: 'Iipeikou', han: 1 });
+    if (dup >= 2) yaku.push({ name: '二盃口', han: 3 });
+    else if (dup === 1) yaku.push({ name: '一盃口', han: 1 });
   }
 
   for (const s of tris) {
     const k = s.tile;
-    if (k === HAKU) yaku.push({ name: 'Yakuhai: Haku', han: 1 });
-    if (k === HATSU) yaku.push({ name: 'Yakuhai: Hatsu', han: 1 });
-    if (k === CHUN) yaku.push({ name: 'Yakuhai: Chun', han: 1 });
-    if (k === ctx.seatWind) yaku.push({ name: `Seat Wind: ${windName(k)}`, han: 1 });
-    if (k === ctx.roundWind) yaku.push({ name: `Round Wind: ${windName(k)}`, han: 1 });
+    if (k === HAKU) yaku.push({ name: '役牌 白', han: 1 });
+    if (k === HATSU) yaku.push({ name: '役牌 發', han: 1 });
+    if (k === CHUN) yaku.push({ name: '役牌 中', han: 1 });
+    if (k === ctx.seatWind) yaku.push({ name: `自風 ${windName(k)}`, han: 1 });
+    if (k === ctx.roundWind) yaku.push({ name: `場風 ${windName(k)}`, han: 1 });
   }
 
-  if (tris.length === 4) yaku.push({ name: 'Toitoi', han: 2 });
-  if (ankou === 3) yaku.push({ name: 'Sanankou', han: 2 });
-  if (kans === 3) yaku.push({ name: 'Sankantsu', han: 2 });
+  if (tris.length === 4) yaku.push({ name: '対々和', han: 2 });
+  if (ankou === 3) yaku.push({ name: '三暗刻', han: 2 });
+  if (kans === 3) yaku.push({ name: '三槓子', han: 2 });
   // Sanshoku doukou (possible in sanma only with 1s or 9s across m/p/s)
   for (let n = 0; n < 9; n++) {
     if (tris.some(s => s.tile === n) && tris.some(s => s.tile === 9 + n) && tris.some(s => s.tile === 18 + n)) {
-      yaku.push({ name: 'Sanshoku Doukou', han: 2 });
+      yaku.push({ name: '三色同刻', han: 2 });
     }
   }
   // Sanshoku doujun is impossible in sanma (no manzu sequences).
-  if (dragonTris === 2 && isDragon(pair)) yaku.push({ name: 'Shousangen', han: 2 });
+  if (dragonTris === 2 && isDragon(pair)) yaku.push({ name: '小三元', han: 2 });
 
   const allYaochu = YAOCHU_KINDS.reduce((a, k) => a + all[k], 0) === all.reduce((a, b) => a + b, 0);
-  if (allYaochu) yaku.push({ name: 'Honroutou', han: 2 });
+  if (allYaochu) yaku.push({ name: '混老頭', han: 2 });
   else if (seqs.length > 0) {
     const setHasYaochu = (s: SetInfo) => (s.type === 'seq' ? numOf(s.tile) === 1 || numOf(s.tile) === 7 : isYaochu(s.tile));
     if (sets.every(setHasYaochu) && isYaochu(pair)) {
       const anyHonor = sets.some(s => isHonor(s.tile)) || isHonor(pair);
-      if (anyHonor) yaku.push({ name: 'Chanta', han: closedHand ? 2 : 1 });
-      else yaku.push({ name: 'Junchan', han: closedHand ? 3 : 2 });
+      if (anyHonor) yaku.push({ name: '混全帯幺九', han: closedHand ? 2 : 1 });
+      else yaku.push({ name: '純全帯幺九', han: closedHand ? 3 : 2 });
     }
   }
   // Ittsu
   for (const base of [9, 18]) {
-    if ([0, 3, 6].every(o => seqs.some(s => s.tile === base + o))) yaku.push({ name: 'Ittsu', han: closedHand ? 2 : 1 });
+    if ([0, 3, 6].every(o => seqs.some(s => s.tile === base + o))) yaku.push({ name: '一気通貫', han: closedHand ? 2 : 1 });
   }
   colorYaku(all, closedHand, yaku);
 
@@ -323,7 +323,7 @@ function evalRegular(ctx: WinContext, d: Decomposition, winIdx: number, closedHa
 }
 
 function windName(k: number): string {
-  return k === EAST ? 'East' : k === SOUTH ? 'South' : k === WEST ? 'West' : 'North';
+  return k === EAST ? '東' : k === SOUTH ? '南' : k === WEST ? '西' : '北';
 }
 
 function chuuren(c: ArrayLike<number>, win: number): YakuItem | null {
@@ -340,8 +340,8 @@ function chuuren(c: ArrayLike<number>, win: number): YakuItem | null {
       if (v > need[i]) extra = base + i;
     }
     if (!ok || tot !== 14) continue;
-    if (extra === win) return { name: 'Junsei Chuuren Poutou', han: 2, yakuman: true };
-    return { name: 'Chuuren Poutou', han: 1, yakuman: true };
+    if (extra === win) return { name: '純正九蓮宝燈', han: 2, yakuman: true };
+    return { name: '九蓮宝燈', han: 1, yakuman: true };
   }
   return null;
 }
@@ -350,19 +350,19 @@ function evalChiitoi(ctx: WinContext): Candidate {
   const yakuman = situationalYakuman(ctx);
   let allHonor = true;
   for (let k = 0; k < 27; k++) if (ctx.closed[k]) allHonor = false;
-  if (allHonor) yakuman.push({ name: 'Tsuuiisou', han: 1, yakuman: true });
+  if (allHonor) yakuman.push({ name: '字一色', han: 1, yakuman: true });
   if (yakuman.length) return { yaku: yakuman, han: 0, fu: 0, yakuman: yakuman.reduce((a, y) => a + y.han, 0) };
   const yaku: YakuItem[] = [];
   situationalYaku(ctx, true, yaku);
-  yaku.push({ name: 'Chiitoitsu', han: 2 });
+  yaku.push({ name: '七対子', han: 2 });
   const all = Array.from(ctx.closed);
   let tanyao = true, allYaochu = true;
   for (let k = 0; k < 34; k++) {
     if (!all[k]) continue;
     if (isYaochu(k)) tanyao = false; else allYaochu = false;
   }
-  if (tanyao) yaku.push({ name: 'Tanyao', han: 1 });
-  if (allYaochu) yaku.push({ name: 'Honroutou', han: 2 });
+  if (tanyao) yaku.push({ name: '断幺九', han: 1 });
+  if (allYaochu) yaku.push({ name: '混老頭', han: 2 });
   colorYaku(all, true, yaku);
   return { yaku, han: yaku.reduce((a, y) => a + y.han, 0), fu: 25, yakuman: 0 };
 }
@@ -370,8 +370,8 @@ function evalChiitoi(ctx: WinContext): Candidate {
 function evalKokushi(ctx: WinContext): Candidate {
   const y = situationalYakuman(ctx);
   // 13-sided: the winning tile is the pair tile
-  if (ctx.closed[ctx.winTile] === 2) y.push({ name: 'Kokushi Musou 13-wait', han: 2, yakuman: true });
-  else y.push({ name: 'Kokushi Musou', han: 1, yakuman: true });
+  if (ctx.closed[ctx.winTile] === 2) y.push({ name: '国士無双十三面待ち', han: 2, yakuman: true });
+  else y.push({ name: '国士無双', han: 1, yakuman: true });
   return { yaku: y, han: 0, fu: 0, yakuman: y.reduce((a, x) => a + x.han, 0) };
 }
 
@@ -414,10 +414,10 @@ export function scoreHand(ctx: WinContext): ScoreResult {
     const yaku = c.yaku.slice();
     let han = c.han;
     if (c.yakuman === 0) {
-      if (doraBase) yaku.push({ name: 'Dora', han: doraBase });
-      if (ctx.aka) yaku.push({ name: 'Aka Dora', han: ctx.aka });
-      if (ctx.kita) yaku.push({ name: 'Nuki Dora (Kita)', han: ctx.kita });
-      if (ura) yaku.push({ name: 'Ura Dora', han: ura });
+      if (doraBase) yaku.push({ name: 'ドラ', han: doraBase });
+      if (ctx.aka) yaku.push({ name: '赤ドラ', han: ctx.aka });
+      if (ctx.kita) yaku.push({ name: '抜きドラ', han: ctx.kita });
+      if (ura) yaku.push({ name: '裏ドラ', han: ura });
       han += dora;
     }
     const { base, limitName } = basePoints(han, c.fu, c.yakuman);

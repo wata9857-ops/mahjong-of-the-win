@@ -1,5 +1,6 @@
 import type { Objective } from '../ai/placement';
 import type { Mode } from '../ai/types';
+import type { ThemePref } from './theme';
 import { newMatch } from '../game/match';
 import type { GameEvent, MatchInfo } from '../game/types';
 
@@ -7,6 +8,7 @@ export interface Settings {
   mode: Mode;
   objective: Objective;
   showDanger: boolean;
+  theme: ThemePref;
 }
 
 export interface HistoryEntry {
@@ -27,7 +29,7 @@ export interface Saved {
 
 const KEY = 'pon-intended-v1';
 
-export const defaultSettings: Settings = { mode: 'advanced', objective: 'top', showDanger: true };
+export const defaultSettings: Settings = { mode: 'advanced', objective: 'top', showDanger: true, theme: 'auto' };
 
 export function load(): Saved {
   try {

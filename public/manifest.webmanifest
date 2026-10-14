@@ -1,7 +1,8 @@
 {
-  "name": "Pon Intended — Mahjong of the Win",
-  "short_name": "Pon Intended",
-  "description": "Mahjong Soul sanma East-only decision-support AI",
+  "name": "勝ちポン｜三麻東風戦 勝利支援AI",
+  "short_name": "勝ちポン",
+  "description": "雀魂 三人麻雀 東風戦の勝利支援AI",
+  "lang": "ja",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

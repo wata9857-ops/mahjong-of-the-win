@@ -1,41 +1,24 @@
-# 🀄 Pon Intended — *Mahjong of the Win*
+# 🀄 勝ちポン — 三麻東風戦 勝利支援AI
 
-A decision-support AI for **Mahjong Soul (雀魂) three-player East-only ranked matches** (三麻東風戦).
-You enter the game as it happens; the engine recommends the move that maximises your
-**probability of finishing 1st**. Runs entirely in the browser (iPad / iPhone / PC), works offline as a PWA.
+雀魂（じゃんたま）三人麻雀・東風戦（段位戦）のための意思決定支援AIです。対局の進行を入力すると、
+**トップ率が最も高くなる一手**をリアルタイムで推奨します。iPad・iPhone・PCのブラウザでそのまま使えます（PWA対応・オフライン可）。
 
-**▶ Live app: https://wata9857-ops.github.io/mahjong-of-the-win/**
+**▶ アプリ：https://wata9857-ops.github.io/mahjong-of-the-win/**
 
-> Name alternatives considered: *Tile Be Back*, *Riichi Rich*, *Kita-ble Genius*, *Ron Burgundy*. *Pon Intended* won by a nose.
+## 使い方
+1. **設定**：親・局・本場・供託・持ち点を選んで「この局を開始」。
+2. **ドラ表示牌**をタップ → **配牌13枚**をタップ（間違えた牌は手牌をタップで削除）。
+3. あとは画面上部の案内どおりに牌をタップするだけ。手番は自動で進みます。
+   - 自分のツモ → 牌一覧からタップ／打牌 → 手牌をタップ、または**推奨カードをタップで即実行**。
+   - 相手の打牌 → 牌一覧からタップ。相手の**リーチ・ポン・カン・北抜き・ロン・ツモ**は各相手の枠のボタンから。
+4. **局終了**から和了・流局を確定すると、点数移動・連荘・南入（サドンデス）・トビ・アガリやめまで自動で処理します。
+5. 右上のボタンで**ライト／ダーク／自動**テーマを切り替えられます（設定は保存されます）。
+
+計算モード：瞬速／詳細（標準）／最強。目標：トップ率／順位点。
 
 ---
 
-## Using it during a match
-
-1. **Setup** (opens automatically): choose who is dealer, the round, honba, deposits, scores → **Start hand**.
-2. Tap the **dora indicator**, then your **13 tiles** on the palette (tap a hand tile to remove a mistake).
-3. Play. Input follows the real turn order automatically — the yellow prompt tells you what the next tap means:
-   - **"Tap the tile YOU DREW"** → tap your draw on the palette.
-   - **Your discard** → tap the tile in your hand, or tap the big green **recommendation** to play it in one touch.
-   - **"Shimocha/Kamicha discards…"** → tap the tile that player discarded.
-4. Opponent events: each opponent panel has **Riichi** (arm, then tap their discard), **Pon** (calls the last discard),
-   **Kan** (then tap the tile: daiminkan / kakan / ankan detected automatically), **Kita**, **Ron**, **Tsumo**.
-   Tap an opponent panel to redirect input to that player if the turn order was broken.
-5. Your calls: **Pon / Kan / Kita / Riichi / Tsumo / Ron** buttons are enabled only when legal. When an opponent
-   discards a tile you can call, the panel switches to a **call decision** (Pon vs. no call, Ron vs. pass).
-6. **End hand** → choose ron / tsumo / draw (your own wins are scored automatically; for opponents tap han/fu).
-   Scores, honba, deposits, dealer rotation, sudden-death South, bankruptcy and agari-yame are applied for you.
-
-Extras: **Undo/Redo** (exact, event-sourced), **+** next to dora for kan dora, **wall ±** correction,
-remaining-copy badges on every palette tile, danger bars under your tiles (green → red),
-the game survives reloads (saved locally). Keyboard on PC: type `5p`, `19m`, `e`/`s`/`w`/`n`/`p`/`f`/`c`,
-**Enter** = apply recommendation, **R** = arm riichi, **Ctrl+Z / Ctrl+Y**.
-
-**Modes:** *Instant* (~few ms), *Advanced* (default, typically <200 ms), *Max strength* (deeper search, larger simulation).
-A fast result is shown first and refined in the background; the UI never blocks.
-**Goal:** *1st place* (default) or *rank points* (uma 15/0/−15 + score).
-
-**Install on iPad:** open the URL in Safari → Share → *Add to Home Screen* for full-screen mode.
+*(Technical documentation below is in English.)*
 
 ---
 
@@ -66,9 +49,9 @@ live wall starts at 55 tiles (use the wall ± buttons if your client shows a dif
 ```bash
 npm install
 npm run dev        # local dev server
-npm test           # 85 unit tests (rules, shanten, scoring, legality, furiten, state, match end, AI, performance)
+npm test           # 97 unit tests (rules, shanten, scoring, legality, furiten, state, match end, AI, performance, theme, tile art)
 npm run build      # type-check + production build to dist/
-npx vite preview & npm run e2e   # browser end-to-end test (Chrome/Edge via playwright-core)
+npx vite preview & npm run e2e   # browser E2E: full flow, both themes, no-English scan, overlap checks at iPad/iPhone/PC sizes
 ```
 
 Stack: TypeScript + Preact + Vite, engine in a Web Worker, PWA (manifest + service worker).

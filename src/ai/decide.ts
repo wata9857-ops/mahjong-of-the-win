@@ -334,25 +334,25 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
         c[x]--;
       }
       const tenpai = s === 0;
-      const label = kindLabel === 'pon' ? `Pon ${tileLabel(ponKind!)} → discard ${tileLabel(tile)}` : `Discard ${tileLabel(tile)}`;
+      const label = kindLabel === 'pon' ? `ポン ${tileLabel(ponKind!)} → ${tileLabel(tile)}切り` : `${tileLabel(tile)}切り`;
       if (tenpai) {
         const dama = evx.tenpaiCurve(c, 'dama');
         // discarding one of my own waits makes the hand furiten
         const furiten = st.myFuritenRiichi || dama.waits.some(w => ctx.myDiscardKinds.has(w) || w === k);
         const damaCurve = furiten ? evx.tenpaiCurve(c, 'dama', true) : dama;
         res.push({
-          kind: kindLabel === 'pon' ? 'pon' : 'discard', tile, callKind: ponKind, label: closed && legal.riichiDiscards.includes(tile) ? `${label} (dama)` : label,
+          kind: kindLabel === 'pon' ? 'pon' : 'discard', tile, callKind: ponKind, label: closed && legal.riichiDiscards.includes(tile) ? `${label}（ダマ）` : label,
           curve: damaCurve, T: turns, avgValue: damaCurve.avgValue, tsumoShare: 0.4,
           immediate: immediateFor(k), pushDanger: pushDangerFor(after, true), riichi: false, tenpaiNow: true, shanten: 0,
           ukeire: dama.waitCount, waits: dama.waits,
-          extraNotes: dama.avgValue === 0 ? ['no yaku: cannot win by ron'] : furiten ? ['furiten'] : [],
+          extraNotes: dama.avgValue === 0 ? ['役なし：ロン和了不可'] : furiten ? ['フリテン'] : [],
         });
         if (kindLabel === 'discard' && closed && legal.riichiDiscards.includes(tile)) {
           const rc = evx.tenpaiCurve(c, 'riichi', furiten);
           res.push({
-            kind: 'riichi', tile, label: `Riichi, discard ${tileLabel(tile)}`, curve: rc, T: turns, avgValue: rc.avgValue, tsumoShare: 0.47,
+            kind: 'riichi', tile, label: `リーチ（${tileLabel(tile)}切り）`, curve: rc, T: turns, avgValue: rc.avgValue, tsumoShare: 0.47,
             immediate: immediateFor(k), pushDanger: pushDangerFor(after, true), riichi: true, tenpaiNow: true, shanten: 0,
-            ukeire: rc.waitCount, waits: rc.waits, extraNotes: furiten ? ['furiten riichi (tsumo only)'] : [],
+            ukeire: rc.waitCount, waits: rc.waits, extraNotes: furiten ? ['フリテンリーチ（ツモのみ）'] : [],
           });
         }
       } else {
@@ -364,11 +364,11 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
       }
       c[k]++;
     }
-    if (ev.timedOut) notes.push('Deep search hit its time budget; deeper states used the heuristic.');
+    if (ev.timedOut) notes.push('深い探索が時間上限に達したため、一部は近似評価です。');
     return res;
   };
 
-  const foldPlan = (hand: TileKey[], allowed: TileKey[], label = 'Fold'): Plan | null => {
+  const foldPlan = (hand: TileKey[], allowed: TileKey[], label = 'ベタオリ'): Plan | null => {
     if (!anyThreat) return null;
     let best: TileKey | null = null, bestD = Infinity;
     for (const t of allowed) {
@@ -383,7 +383,7 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
     const k = kindOf(best);
     const c = toCounts(rest);
     return {
-      kind: 'fold', tile: best, label: `${label}: discard ${tileLabel(best)} (safest)`, curve: null, T: ctx.turns, avgValue: 0, tsumoShare: 0,
+      kind: 'fold', tile: best, label: `${label}：${tileLabel(best)}切り（最も安全）`, curve: null, T: ctx.turns, avgValue: 0, tsumoShare: 0,
       immediate: immediateFor(k), pushDanger: [0, 0, 0], foldDanger: seq, riichi: false,
       tenpaiNow: shanten(c, myMelds) === 0, shanten: shanten(c, myMelds),
     };
@@ -405,9 +405,9 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
       d[0] += m.kyotaku * 1000;
       const r = deterministicWin(m, d, m.dealer === 0, cfg.sims, opt.objective);
       fixed.push({
-        kind: 'tsumo', label: `TSUMO! ${ts.han ? ts.han + ' han ' + ts.fu + ' fu' : ''} ${ts.limitName} (+${d[0]})`, utility: r.u + WIN_BIAS, pFirst: r.p1, pLast: r.p3,
+        kind: 'tsumo', label: `ツモ！ ${ts.yakuman ? '' : `${ts.han}翻${ts.fu}符`} ${ts.limitName}（+${d[0]}点）`, utility: r.u + WIN_BIAS, pFirst: r.p1, pLast: r.p3,
         evPoints: d[0], winProb: 1, winValue: d[0], immediateRisk: 0, totalDealIn: 0,
-        reason: `${ts.yaku.map(y => `${y.name}${y.yakuman ? '' : ' ' + y.han}`).join(', ')}${r.ended ? ' — ends the match' : ''}`,
+        reason: `${ts.yaku.map(y => `${y.name}${y.yakuman ? '' : ` ${y.han}翻`}`).join('・')}${r.ended ? '（この和了で終局）' : ''}`,
       });
     }
     plans.push(...discardPlans(st.myHand, legal.discards, me.melds, ctx.turns, 'discard'));
@@ -422,10 +422,10 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
       const s = shanten(c, myMelds);
       const robRisk = models.reduce((a, mm) => a + dealInProb(mm, NORTH) * 0.3, 0);
       plans.push({
-        kind: 'kita', callKind: NORTH, label: 'Kita (extract North)', curve: cv, T: ctx.turns + 1,
+        kind: 'kita', callKind: NORTH, label: '北抜き', curve: cv, T: ctx.turns + 1,
         avgValue: cv.p[ctx.turns + 1] > 0 ? cv.e[ctx.turns + 1] / cv.p[ctx.turns + 1] : 0, tsumoShare: 0.45,
         immediate: [0, robRisk / 2, robRisk / 2], pushDanger: pushDangerFor(after, s === 0), riichi: false, tenpaiNow: s === 0, shanten: s,
-        extraNotes: ['+1 nuki dora, replacement draw, no discard'],
+        extraNotes: ['抜きドラ+1・嶺上牌をツモ・打牌なし'],
       });
     }
     // --- ankan / kakan ---
@@ -439,10 +439,10 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
       const s = shanten(c, newMelds.length);
       const chankan = isAn ? 0 : models.reduce((a, mm) => a + dealInProb(mm, k), 0);
       plans.push({
-        kind: isAn ? 'ankan' : 'kakan', callKind: k, label: `${isAn ? 'Ankan' : 'Kakan'} ${tileLabel(k)}`, curve: cv, T: ctx.turns + 1,
+        kind: isAn ? 'ankan' : 'kakan', callKind: k, label: `${isAn ? '暗槓' : '加槓'} ${tileLabel(k)}`, curve: cv, T: ctx.turns + 1,
         avgValue: cv.p[ctx.turns + 1] > 0 ? cv.e[ctx.turns + 1] / cv.p[ctx.turns + 1] : 0, tsumoShare: 0.45,
         immediate: [0, chankan / 2, chankan / 2], pushDanger: pushDangerFor(after, s === 0), riichi: false, tenpaiNow: s === 0, shanten: s,
-        oppValueMul: 1.08, extraNotes: ['new kan dora for everyone'],
+        oppValueMul: 1.08, extraNotes: ['新ドラ（カンドラ）は全員に有効'],
       });
     }
   } else if (st.pendingRon || (st.lastDiscard && st.lastDiscard.seat !== 0)) {
@@ -456,12 +456,12 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
       d[pr.seat] -= pay; d[0] += pay + m.kyotaku * 1000;
       const r = deterministicWin(m, d, m.dealer === 0, cfg.sims, opt.objective);
       fixed.push({
-        kind: 'ron', label: `RON! ${sc.han ? sc.han + ' han ' + sc.fu + ' fu' : ''} ${sc.limitName} (+${d[0]})`, utility: r.u + WIN_BIAS, pFirst: r.p1, pLast: r.p3,
+        kind: 'ron', label: `ロン！ ${sc.yakuman ? '' : `${sc.han}翻${sc.fu}符`} ${sc.limitName}（+${d[0]}点）`, utility: r.u + WIN_BIAS, pFirst: r.p1, pLast: r.p3,
         evPoints: d[0], winProb: 1, winValue: d[0], immediateRisk: 0, totalDealIn: 0,
-        reason: `${sc.yaku.map(y => `${y.name}${y.yakuman ? '' : ' ' + y.han}`).join(', ')}${r.ended ? ' — ends the match' : ''}`,
+        reason: `${sc.yaku.map(y => `${y.name}${y.yakuman ? '' : ` ${y.han}翻`}`).join('・')}${r.ended ? '（この和了で終局）' : ''}`,
       });
     } else if (pr && !legal.ron && myRonScore(st, pr.tile, pr.kind === 'chankan', pr.kind === 'kita') && isMyFuriten(st)) {
-      notes.push('Winning tile, but you are furiten — Ron is illegal.');
+      notes.push('和了牌ですがフリテンのためロンできません。');
     }
     // pass: keep the 13-tile hand
     const passTurns = remainingDraws(st.wall, st.turn === 1 ? 1 : 0);
@@ -474,7 +474,7 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
       const furiten = st.myFuritenRiichi || (me.riichi && legal.ron);
       const cv = s === 0 ? ev.tenpaiCurve(c, me.riichi ? 'riichi' : closed ? 'auto' : 'dama', furiten) : ev.curve(c);
       plans.push({
-        kind: 'pass', label: legal.ron ? 'Pass (skip Ron)' : 'No call', curve: cv, T: passTurns,
+        kind: 'pass', label: legal.ron ? '見逃し（ロンしない）' : '鳴かない（スルー）', curve: cv, T: passTurns,
         avgValue: cv.p[passTurns] > 0 ? cv.e[passTurns] / cv.p[passTurns] : 0, tsumoShare: 0.45,
         immediate: [0, 0, 0], pushDanger: pushDangerFor(st.myHand, s === 0), riichi: false, tenpaiNow: s === 0, shanten: s,
       });
@@ -499,17 +499,17 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
         const cv = ev.curve(c);
         const s = shanten(c, melds.length);
         plans.push({
-          kind: 'daiminkan', callKind: k, label: `Daiminkan ${tileLabel(k)}`, curve: cv, T: ponTurns + 1,
+          kind: 'daiminkan', callKind: k, label: `大明槓 ${tileLabel(k)}`, curve: cv, T: ponTurns + 1,
           avgValue: cv.p[ponTurns + 1] > 0 ? cv.e[ponTurns + 1] / cv.p[ponTurns + 1] : 0, tsumoShare: 0.4,
           immediate: [0, 0, 0], pushDanger: pushDangerFor(hand, s === 0), riichi: false, tenpaiNow: s === 0, shanten: s,
-          oppValueMul: 1.08, extraNotes: ['opens the hand; new kan dora for everyone'],
+          oppValueMul: 1.08, extraNotes: ['門前が崩れる・新ドラは全員に有効'],
         });
       }
     }
   } else {
     return {
       ...base, candidates: [], confidence: 0, situation: 'idle', shanten: hs, ms: performance.now() - t0,
-      notes: st.turn === 0 && st.stage === 'draw' ? ['Enter your drawn tile.'] : ['Waiting for opponent action.'],
+      notes: st.turn === 0 && st.stage === 'draw' ? ['ツモった牌を入力してください。'] : ['相手の行動を待っています。'],
     };
   }
 
@@ -529,8 +529,8 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
   // stable ordering: utility, then EV, then lower risk
   cands.sort((a, b) => b.utility - a.utility || b.evPoints - a.evPoints || a.immediateRisk - b.immediateRisk);
   const confidence = confidenceOf(cands, notes.length > 0, opt.mode);
-  if (me.riichi) notes.push('In riichi: only tsumogiri, Tsumo/Ron, Kita, or wait-preserving Ankan are legal.');
-  if (isMyFuriten(st)) notes.push('You are furiten (Ron not allowed; Tsumo is).');
+  if (me.riichi) notes.push('リーチ中：ツモ切り・ツモ／ロン・北抜き・待ちが変わらない暗槓のみ可能です。');
+  if (isMyFuriten(st)) notes.push('フリテンです（ロン不可、ツモ和了は可）。');
   return {
     ...base, candidates: cands, confidence, situation, shanten: hs, notes: [...notes],
     ms: performance.now() - t0,
@@ -539,15 +539,15 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
 
 function reasonFor(plan: Plan, pWin: number, imm: number, models: OpponentModel[], extra?: string[]): string {
   const parts: string[] = [];
-  if (plan.kind === 'fold') parts.push('Defend: no realistic win vs. threat');
-  else if (plan.shanten === 0) parts.push(`Tenpai${plan.waits?.length ? ` on ${plan.waits.map(tileLabel).join(' ')}` : ''} (${plan.ukeire ?? 0} live)`);
-  else parts.push(`${plan.shanten}-shanten, ${plan.ukeire ?? 0} tiles accept`);
-  if (plan.curve) parts.push(`win ${(pWin * 100).toFixed(0)}%, ~${Math.round(plan.avgValue)} pts`);
+  if (plan.kind === 'fold') parts.push('守備：和了の見込みが薄く、相手の脅威が大きい');
+  else if (plan.shanten === 0) parts.push(`聴牌${plan.waits?.length ? `（${plan.waits.map(tileLabel).join('・')}待ち）` : ''} 残り${plan.ukeire ?? 0}枚`);
+  else parts.push(plan.ukeire !== undefined ? `${plan.shanten}向聴・受け入れ${plan.ukeire}枚` : `${plan.shanten}向聴`);
+  if (plan.curve) parts.push(`和了率${(pWin * 100).toFixed(0)}%・打点約${Math.round(plan.avgValue)}点`);
   if (imm > 0.005) {
-    const who = models.filter(m => m.tenpai > 0.3).map(m => (m.seat === 1 ? 'Right' : 'Left')).join('/');
-    parts.push(`deal-in now ${(imm * 100).toFixed(1)}%${who ? ` (${who})` : ''}`);
-  } else if (models.some(m => m.tenpai > 0.4)) parts.push('safe tile now');
-  if (plan.riichi) parts.push('+1 han & ura, locks hand');
+    const who = models.filter(m => m.tenpai > 0.3).map(m => (m.seat === 1 ? '下家' : '上家')).join('/');
+    parts.push(`この打牌の放銃率${(imm * 100).toFixed(1)}%${who ? `（${who}）` : ''}`);
+  } else if (models.some(m => m.tenpai > 0.4)) parts.push('現状安全牌');
+  if (plan.riichi) parts.push('1翻＋裏ドラ期待・手牌固定');
   if (extra?.length) parts.push(...extra);
   return parts.join(' · ');
 }

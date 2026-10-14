@@ -117,20 +117,20 @@ function progress(prev: MatchInfo, next: MatchInfo, d: [number, number, number],
     final[ranks[0]] += next.kyotaku * 1000;
     return { deltas: d, next: { ...next, kyotaku: 0 }, ended: true, reason, final, ranks };
   };
-  if (next.scores.some(s => s < 0)) return finish('Bankruptcy');
+  if (next.scores.some(s => s < 0)) return finish('トビ終了');
   const ranks = rankSeats(next.scores, next.initialDealer);
   const topScore = next.scores[ranks[0]];
   const lateGame = prev.roundWind === 1 || prev.handNumber === 3;
   if (renchan) {
-    if (lateGame && ranks[0] === prev.dealer && next.scores[prev.dealer] >= TARGET_POINTS) return finish('Agari-yame / Tenpai-yame');
-    return { deltas: d, next, ended: false, reason: 'Dealer continues' };
+    if (lateGame && ranks[0] === prev.dealer && next.scores[prev.dealer] >= TARGET_POINTS) return finish('アガリやめ・テンパイやめ');
+    return { deltas: d, next, ended: false, reason: '親の連荘' };
   }
-  if (prev.roundWind === 1 && topScore >= TARGET_POINTS) return finish('Sudden death: target reached');
+  if (prev.roundWind === 1 && topScore >= TARGET_POINTS) return finish('サドンデス：トップが40,000点に到達');
   let hand = prev.handNumber + 1;
   let wind = prev.roundWind;
   if (hand > 3) {
-    if (wind === 1) return finish('End of South (no West round)');
-    if (topScore >= TARGET_POINTS) return finish('End of East');
+    if (wind === 1) return finish('南場終了（西入なし）');
+    if (topScore >= TARGET_POINTS) return finish('東場終了');
     wind = 1; hand = 1;
   }
   const dealer = ((next.initialDealer + hand - 1) % 3) as Seat;
@@ -138,7 +138,7 @@ function progress(prev: MatchInfo, next: MatchInfo, d: [number, number, number],
     deltas: d,
     next: { ...next, roundWind: wind as 0 | 1, handNumber: hand as 1 | 2 | 3, dealer },
     ended: false,
-    reason: wind === 1 && prev.roundWind === 0 ? 'Extension into South (sudden death)' : 'Next hand',
+    reason: wind === 1 && prev.roundWind === 0 ? '南入（サドンデス）' : '次局へ',
   };
 }
 
@@ -154,5 +154,5 @@ export function newMatch(dealer: Seat): MatchInfo {
 }
 
 export function roundLabel(m: MatchInfo): string {
-  return `${m.roundWind === 0 ? 'East' : 'South'} ${m.handNumber}`;
+  return `${m.roundWind === 0 ? '東' : '南'}${m.handNumber}局`;
 }

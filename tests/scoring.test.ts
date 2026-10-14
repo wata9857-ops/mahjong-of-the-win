@@ -22,7 +22,7 @@ describe('scoring', () => {
   it('riichi pinfu ron 30fu 2han = 2000', () => {
     const r = scoreHand(ctx('123456p234789s55s', '4s', { riichi: true }));
     expect(r.valid).toBe(true);
-    expect(r.yaku.map(y => y.name)).toContain('Pinfu');
+    expect(r.yaku.map(y => y.name)).toContain('平和');
     expect(r.fu).toBe(30);
     expect(r.han).toBe(2);
     expect(r.ron).toBe(2000);
@@ -50,7 +50,7 @@ describe('scoring', () => {
     const melds: Meld[] = [{ type: 'pon', kind: 10, reds: 0 }];
     const r = scoreHand(ctx('456p234s678s55s', '4s', { melds }));
     expect(r.valid).toBe(true);
-    expect(r.yaku.map(y => y.name)).toEqual(['Tanyao']);
+    expect(r.yaku.map(y => y.name)).toEqual(['断幺九']);
     expect(r.fu).toBe(30);
     expect(r.ron).toBe(1000);
   });
@@ -62,7 +62,7 @@ describe('scoring', () => {
   });
   it('North used in hand is otakaze: pair gives no fu, triplet is no yakuhai', () => {
     const r = scoreHand(ctx('123p456p789s444z55s', '5s', { tsumo: true }));
-    expect(r.yaku.map(y => y.name)).toEqual(['Menzen Tsumo']);
+    expect(r.yaku.map(y => y.name)).toEqual(['門前清自摸和']);
   });
   it('double wind pair is 4 fu', () => {
     // East seat in East round, pair of East, kanchan wait
@@ -80,7 +80,7 @@ describe('scoring', () => {
     // this is chuuren (yakuman)
     expect(r.yakuman).toBeGreaterThanOrEqual(1);
     const r2 = scoreHand(ctx('123456789p11z55z5z', '5z'));
-    expect(r2.yaku.map(y => y.name)).toContain('Honitsu');
+    expect(r2.yaku.map(y => y.name)).toContain('混一色');
   });
   it('kokushi 13-wait is double yakuman', () => {
     const r = scoreHand(ctx('19m19p19s12345677z', '7z'));
@@ -106,18 +106,18 @@ describe('scoring', () => {
       { type: 'minkan', kind: 18, reds: 0 },
     ];
     const r = scoreHand(ctx('234p55p', '5p', { melds, tsumo: true }));
-    expect(r.yaku.map(y => y.name)).toEqual(expect.arrayContaining(['Sankantsu', 'Yakuhai: Haku']));
+    expect(r.yaku.map(y => y.name)).toEqual(expect.arrayContaining(['三槓子', '役牌 白']));
     // 20 + 2 tsumo + 32 (haku ankan) + 16 + 16 (yaochu minkan) + 2 tanki = 88 -> 90
     expect(r.fu).toBe(90);
   });
   it('rinshan after kita', () => {
     const r = scoreHand(ctx('123456p234789s55s', '4s', { tsumo: true, rinshan: true, kita: 1 }));
-    expect(r.yaku.map(y => y.name)).toContain('Rinshan Kaihou');
-    expect(r.yaku.map(y => y.name)).toContain('Nuki Dora (Kita)');
+    expect(r.yaku.map(y => y.name)).toContain('嶺上開花');
+    expect(r.yaku.map(y => y.name)).toContain('抜きドラ');
   });
   it('robbing kita does not give chankan (caller sets chankan=false)', () => {
     const r = scoreHand(ctx('19m19p19s12345677z', '4z', { chankan: false }));
-    expect(r.yaku.some(y => y.name === 'Chankan')).toBe(false);
+    expect(r.yaku.some(y => y.name === '槍槓')).toBe(false);
     void NORTH;
   });
 });

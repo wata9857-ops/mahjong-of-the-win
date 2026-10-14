@@ -4,8 +4,8 @@ import type { Meld } from '../core/scoring';
 /** Relative seats: 0 = me, 1 = shimocha (plays after me), 2 = kamicha (plays before me). */
 export type Seat = 0 | 1 | 2;
 export const nextSeat = (s: Seat): Seat => ((s + 1) % 3) as Seat;
-export const SEAT_NAMES = ['Me', 'Shimocha', 'Kamicha'] as const;
-export const SEAT_SHORT = ['Me', 'Right', 'Left'] as const;
+export const SEAT_NAMES = ['自家', '下家', '上家'] as const;
+export const SEAT_SHORT = ['自分', '下家', '上家'] as const;
 
 export const START_POINTS = 35000;
 export const TARGET_POINTS = 40000;

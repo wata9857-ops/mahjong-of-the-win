@@ -1,6 +1,6 @@
 // Offline support: cache-first for content-hashed build assets, network-first
 // (falling back to cache) for everything else so deployments update promptly.
-const CACHE = 'pon-intended-v1';
+const CACHE = 'kachipon-v2';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
