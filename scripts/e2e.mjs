@@ -123,25 +123,26 @@ console.log('最初の推奨:', recLabel);
 
 // ---- Theme: auto follows the OS, toggle cycles, preference persists
 const themeOf = () => page.evaluate(() => document.documentElement.dataset.theme);
+const waitTheme = t => page.waitForFunction(x => document.documentElement.dataset.theme === x, t, { timeout: 3000 }).then(() => t, () => 'timeout');
 const fail = msg => problems.push(`[Theme] ${msg}`);
 await page.emulateMedia({ colorScheme: 'dark' });
 await page.waitForTimeout(100);
-if (await themeOf() !== 'dark') fail('auto did not follow OS dark');
+if (await waitTheme('dark') !== 'dark') fail('auto did not follow OS dark');
 await page.emulateMedia({ colorScheme: 'light' });
 await page.waitForTimeout(100);
-if (await themeOf() !== 'light') fail('auto did not follow OS light');
+if (await waitTheme('light') !== 'light') fail('auto did not follow OS light');
 await page.getByTestId('theme').click(); // -> light
-if (await themeOf() !== 'light') fail('light not applied');
+if (await waitTheme('light') !== 'light') fail('light not applied');
 await page.getByTestId('theme').click(); // -> dark
-if (await themeOf() !== 'dark') fail('dark not applied');
+if (await waitTheme('dark') !== 'dark') fail('dark not applied');
 await page.reload();
 await page.waitForSelector('.palette');
-if (await themeOf() !== 'dark') fail('dark preference not persisted after reload');
+if (await waitTheme('dark') !== 'dark') fail('dark preference not persisted after reload');
 await settle();
 await checkAll('first recommendation (dark)');
 await page.screenshot({ path: 'e2e-shots/1b-first-draw-dark.png' });
 await page.getByTestId('theme').click(); // -> auto (OS is light)
-if (await themeOf() !== 'light') fail('auto did not return to OS theme');
+if (await waitTheme('light') !== 'light') fail('auto did not return to OS theme');
 
 await page.locator('button.best').click();
 await page.waitForTimeout(300);
