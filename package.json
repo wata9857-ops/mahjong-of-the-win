@@ -1,0 +1,28 @@
+{
+  "name": "mahjong-of-the-win",
+  "version": "1.0.0",
+  "description": "Pon Intended — a Mahjong Soul three-player East-only decision-support AI (PWA)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "e2e": "node scripts/e2e.mjs",
+    "icons": "node scripts/gen-icons.mjs"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "preact": "^11.0.1"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.6",
+    "playwright-core": "^1.64.1",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
+  }
+}
