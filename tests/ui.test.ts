@@ -75,7 +75,7 @@ describe('tile artwork', () => {
 
 describe('Japanese labels', () => {
   it('tile names are Japanese', () => {
-    expect(parseTiles('1m9m5p0p5s0sECF').map(tileLabel)).toEqual(['一萬', '九萬', '5筒', '赤5筒', '5索', '赤5索', '東', '中', '發']);
+    expect(parseTiles('1m9m5p0p5s0sECF').map(tileLabel)).toEqual(['一萬', '九萬', '五筒', '赤五筒', '五索', '赤五索', '東', '中', '發']);
   });
   it('seat and round labels contain no Latin letters', () => {
     for (const s of [...SEAT_NAMES, ...SEAT_SHORT, roundLabel(newMatch(0))]) expect(s).not.toMatch(/[A-Za-z]/);

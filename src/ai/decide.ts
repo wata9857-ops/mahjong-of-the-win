@@ -21,6 +21,8 @@ import { Evaluator, type Curve } from './efficiency';
 import { dealInProb, modelOpponent, type OpponentModel } from './opponents';
 import { placement, utilityOf, type Objective, type PlacementResult } from './placement';
 import type { Analysis, Candidate, Mode } from './types';
+import { humanize } from './humanize';
+import { analyzePartial } from './partial';
 
 export interface ModeConfig {
   maxShantenDP: number;
@@ -273,7 +275,10 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
     opponents: models.map(m => ({ seat: m.seat, tenpai: m.tenpai, value: m.ronValue, riichi: m.riichi, notes: m.notes })),
     notes: [],
     placementNow: { pFirst: now.ranks[0], pSecond: now.ranks[1], pThird: now.ranks[2] },
+    unknown: st.unknown, partial: st.unknown > 0,
   };
+  const threat = models.some(m => m.tenpai >= 0.5);
+  const doraNote = st.doraIndicators.length === 0 ? ['ドラ表示牌がまだ入力されていません（上の「？」から入力できます）。'] : [];
   const counts = toCounts(st.myHand);
   const me = st.players[0];
   const myMelds = me.melds.length;
@@ -281,6 +286,14 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
 
   if (st.phase !== 'play') {
     return { ...base, candidates: [], confidence: 0, situation: 'idle', shanten: hs, ms: performance.now() - t0 };
+  }
+  if (st.unknown > 0) {
+    const p = analyzePartial(st, models, now.ranks[0], now.ranks[2]);
+    const candidates = p.candidates.map(c => {
+      const h = humanize(c, { drawn: st.myDrawn, threat });
+      return { ...h, why: c.why ?? h.why };
+    });
+    return { ...base, candidates, confidence: p.confidence, situation: p.situation, shanten: hs, notes: [...p.notes, ...doraNote], ms: performance.now() - t0 };
   }
   const legal = myLegalActions(st);
   const ctx = buildCtx(st);
@@ -509,7 +522,7 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
   } else {
     return {
       ...base, candidates: [], confidence: 0, situation: 'idle', shanten: hs, ms: performance.now() - t0,
-      notes: st.turn === 0 && st.stage === 'draw' ? ['ツモった牌を入力してください。'] : ['相手の行動を待っています。'],
+      notes: [...(st.turn === 0 && st.stage === 'draw' ? ['ツモった牌を選んでください。'] : ['相手の行動を待っています。']), ...doraNote],
     };
   }
 
@@ -529,10 +542,11 @@ export function analyze(st: HandState, opt: AnalyzeOptions): Analysis {
   // stable ordering: utility, then EV, then lower risk
   cands.sort((a, b) => b.utility - a.utility || b.evPoints - a.evPoints || a.immediateRisk - b.immediateRisk);
   const confidence = confidenceOf(cands, notes.length > 0, opt.mode);
-  if (me.riichi) notes.push('リーチ中：ツモ切り・ツモ／ロン・北抜き・待ちが変わらない暗槓のみ可能です。');
-  if (isMyFuriten(st)) notes.push('フリテンです（ロン不可、ツモ和了は可）。');
+  if (me.riichi) notes.push('リーチ中は、引いた牌をそのまま切ります（アガリ・北抜き・一部のカンは可能）。');
+  if (isMyFuriten(st)) notes.push('フリテン中です：自分の捨て牌に当たり牌があるため、ロンはできません（ツモならアガれます）。');
+  const human = cands.map(c => humanize(c, { drawn: st.myDrawn, threat }));
   return {
-    ...base, candidates: cands, confidence, situation, shanten: hs, notes: [...notes],
+    ...base, candidates: human, confidence, situation, shanten: hs, notes: [...notes, ...doraNote],
     ms: performance.now() - t0,
   };
 }

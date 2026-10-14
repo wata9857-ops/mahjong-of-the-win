@@ -63,7 +63,7 @@ export function SetupDialog({ match, onStart, onCancel }: { match: MatchInfo; on
           <button class="btn" onClick={() => { const m = newMatch(0); setScores(m.scores); setHonba(0); setKyotaku(0); setWind(0); setHand(1); }}>35,000点に戻す</button>
           <button class="btn primary" onClick={() => onStart({ roundWind: wind, handNumber: hand, honba, kyotaku, dealer, initialDealer, scores })}>この局を開始</button>
         </div>
-        <p class="muted">開始後、ドラ表示牌 → 配牌13枚の順にタップしてください。</p>
+        <p class="muted">開始すると4秒間の配牌入力になります。わかる牌だけタップすればOKです。</p>
       </div>
     </div>
   );

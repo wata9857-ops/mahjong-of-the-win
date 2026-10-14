@@ -5,16 +5,18 @@
 
 **▶ アプリ：https://wata9857-ops.github.io/mahjong-of-the-win/**
 
-## 使い方
-1. **設定**：親・局・本場・供託・持ち点を選んで「この局を開始」。
-2. **ドラ表示牌**をタップ → **配牌13枚**をタップ（間違えた牌は手牌をタップで削除）。
-3. あとは画面上部の案内どおりに牌をタップするだけ。手番は自動で進みます。
-   - 自分のツモ → 牌一覧からタップ／打牌 → 手牌をタップ、または**推奨カードをタップで即実行**。
-   - 相手の打牌 → 牌一覧からタップ。相手の**リーチ・ポン・カン・北抜き・ロン・ツモ**は各相手の枠のボタンから。
-4. **局終了**から和了・流局を確定すると、点数移動・連荘・南入（サドンデス）・トビ・アガリやめまで自動で処理します。
-5. 右上のボタンで**ライト／ダーク／自動**テーマを切り替えられます（設定は保存されます）。
+## 使い方（最速フロー）
+1. **対局開始** をタップ → 自分の席 **東・南・西** をタップ（三人麻雀なので北家はありません）。
+2. **4秒間のカウントダウン**中に、わかる配牌だけをタップ（全部でなくてOK・時間切れで自動で始まります）。
+3. あとは画面の大きな案内（「あなたの番です」「下家の番です」「上家の番です」）どおりに牌をタップするだけ。
+   - 自分の番になると「**ツモった牌を選んでください**」と表示 → 牌をタップすると**すぐにおすすめ**が出ます。
+   - おすすめの牌・ボタンは**光って**表示されます。カードをタップすればその通りに実行。引いた牌をそのまま切るなら「**ツモ切り**」。
+   - 相手のリーチ・ポン・カン・北抜き・ロン・ツモは、相手の枠のボタンから1タップ。
+4. 入力できなかった手牌は「**？**」の牌をタップ、ドラ表示牌は上の「**？ 入力**」から、いつでも後から追加できます。
+   未入力の牌がある間、AIは**わかっている牌だけ**で判断し、「参考」と表示します（不明な牌を勝手に決めつけません）。
+5. **局終了**で和了・流局を確定すると、点数・連荘・南入（サドンデス）・トビ・アガリやめまで自動処理し、次局の配牌入力へ進みます。
 
-計算モード：瞬速／詳細（標準）／最強。目標：トップ率／順位点。
+細かい数字（トップ率・和了率・放銃率など）は「くわしく見る」にまとめています。テーマはライト／ダーク／自動。
 
 ---
 
@@ -49,7 +51,7 @@ live wall starts at 55 tiles (use the wall ± buttons if your client shows a dif
 ```bash
 npm install
 npm run dev        # local dev server
-npm test           # 97 unit tests (rules, shanten, scoring, legality, furiten, state, match end, AI, performance, theme, tile art)
+npm test           # 118 unit tests (rules, shanten, scoring, legality, furiten, state, match end, AI, performance, theme, tile art, countdown, partial hands, turn banner)
 npm run build      # type-check + production build to dist/
 npx vite preview & npm run e2e   # browser E2E: full flow, both themes, no-English scan, overlap checks at iPad/iPhone/PC sizes
 ```

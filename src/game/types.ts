@@ -36,7 +36,13 @@ export type GameEvent =
   | { t: 'ankan'; seat: Seat; kind: Kind }
   | { t: 'kakan'; seat: Seat; kind: Kind }
   | { t: 'kita'; seat: Seat }
-  | { t: 'wall'; delta: number };
+  | { t: 'wall'; delta: number }
+  /** begin play with whatever part of the starting hand was entered */
+  | { t: 'start' }
+  /** I drew a tile but did not enter which one */
+  | { t: 'drawUnknown' }
+  /** identify one of my unknown concealed tiles */
+  | { t: 'reveal'; tile: TileKey };
 
 export interface DiscardInfo {
   tile: TileKey;
@@ -91,5 +97,7 @@ export interface HandState {
   kuikaeKind: Kind | null;
   /** turn began via a call (no draw) */
   turnByCall: boolean;
+  /** my concealed tiles whose identity was never entered */
+  unknown: number;
   warnings: string[];
 }

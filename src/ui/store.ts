@@ -25,7 +25,11 @@ export interface Saved {
   settings: Settings;
   history: HistoryEntry[];
   started: boolean;
+  /** which screen to show on reload */
+  view?: View;
 }
+
+export type View = 'home' | 'seat' | 'countdown' | 'game';
 
 const KEY = 'pon-intended-v1';
 

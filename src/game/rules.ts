@@ -63,6 +63,7 @@ export function myWaits(st: HandState): Kind[] {
 }
 
 export function myDiscardFuriten(st: HandState): boolean {
+  if (st.unknown > 0) return false; // waits of a partially known hand are meaningless
   const waits = myWaits(st);
   if (!waits.length) return false;
   const discarded = new Set(st.players[0].discards.map(d => kindOf(d.tile)));
@@ -116,6 +117,7 @@ export function myWinContext(st: HandState, o: WinOpts): WinContext {
 
 /** Score if I can win on `tile` (ron) — ignores furiten; caller checks. */
 export function myRonScore(st: HandState, tile: TileKey, chankan = false, robKita = false): ScoreResult | null {
+  if (st.unknown > 0) return null; // cannot verify a win with unentered tiles
   const c = toCounts(st.myHand);
   c[kindOf(tile)]++;
   if (!isComplete(c, myMeldCount(st))) return null;
@@ -124,7 +126,7 @@ export function myRonScore(st: HandState, tile: TileKey, chankan = false, robKit
 }
 
 export function myTsumoScore(st: HandState): ScoreResult | null {
-  if (st.turn !== 0 || st.stage !== 'discard' || st.myDrawn === null) return null;
+  if (st.turn !== 0 || st.stage !== 'discard' || st.myDrawn === null || st.unknown > 0) return null;
   const c = toCounts(st.myHand);
   if (!isComplete(c, myMeldCount(st))) return null;
   const r = scoreHand(myWinContext(st, { tsumo: true, tile: st.myDrawn }));

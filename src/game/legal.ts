@@ -73,7 +73,7 @@ export function myLegalActions(st: HandState): MyLegal {
       }
       if (res.discards.length === 0) res.discards = [...seen]; // safety: never leave no legal discard
       const closed = me.melds.every(m => m.type === 'ankan');
-      if (closed && st.match.scores[0] >= 1000 && st.wall >= 3) {
+      if (closed && st.unknown === 0 && st.match.scores[0] >= 1000 && st.wall >= 3) {
         for (const t of res.discards) {
           const k = kindOf(t);
           c[k]--;

@@ -80,13 +80,13 @@ export function tileCode(t: TileKey): string {
 
 const KANJI_NUM = ['一', '二', '三', '四', '五', '六', '七', '八', '九'];
 
-/** Japanese display name: 一萬, 5筒, 赤5索, 東 ... (manzu in kanji numerals as on the tile). */
+/** Japanese display name: 一萬, 五筒, 赤五索, 東 ... */
 export function tileLabel(t: TileKey): string {
   const k = kindOf(t);
   if (k >= 27) return HONOR_KANJI[k - 27];
   const n = numOf(k);
   const suit = suitOf(k);
-  const body = suit === 0 ? `${KANJI_NUM[n - 1]}萬` : `${n}${suit === 1 ? '筒' : '索'}`;
+  const body = `${KANJI_NUM[n - 1]}${['萬', '筒', '索'][suit]}`;
   return `${isRed(t) ? '赤' : ''}${body}`;
 }
 

@@ -30,6 +30,12 @@ export interface Candidate {
   ukeire?: number;
   waits?: Kind[];
   reason: string;
+  /** short imperative for the UI, e.g. 「五筒を切る」 */
+  say?: string;
+  /** beginner-friendly one-line explanation */
+  why?: string;
+  /** glossary hint for the key term, if any */
+  hint?: string;
 }
 
 export interface Analysis {
@@ -46,6 +52,10 @@ export interface Analysis {
   opponents: { seat: number; tenpai: number; value: number; riichi: boolean; notes: string[] }[];
   notes: string[];
   placementNow: { pFirst: number; pSecond: number; pThird: number };
+  /** number of my concealed tiles that are still unknown */
+  unknown: number;
+  /** true when the recommendation is based on partial information */
+  partial: boolean;
 }
 
 export interface AnalyzeRequest {

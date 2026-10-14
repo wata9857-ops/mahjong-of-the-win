@@ -6,3 +6,4 @@ dist/
 .env.*
 .claude/
 e2e-shots/
+/IMG_*.PNG

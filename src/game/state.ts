@@ -30,6 +30,7 @@ export function initialHandState(match: MatchInfo): HandState {
     uninterrupted: true,
     kuikaeKind: null,
     turnByCall: false,
+    unknown: 0,
     warnings: [],
   };
 }
@@ -54,7 +55,11 @@ function takeFromHand(st: HandState, kind: Kind, n: number, preferRed = false): 
     if (preferRed && red >= 0) idx = st.myHand.indexOf(red);
     if (idx < 0) idx = st.myHand.indexOf(kind);
     if (idx < 0 && red >= 0) idx = st.myHand.indexOf(red);
-    if (idx < 0) { st.warnings.push(`Missing tile in hand for kind ${kind}`); return reds; }
+    if (idx < 0) {
+      // the tile must be one of my not-yet-entered tiles
+      if (st.unknown > 0) { st.unknown--; continue; }
+      st.warnings.push(`Missing tile in hand for kind ${kind}`); return reds;
+    }
     if (isRed(st.myHand[idx])) reds++;
     st.myHand.splice(idx, 1);
   }
@@ -93,7 +98,7 @@ function passTurnTo(st: HandState, s: Seat): void {
 
 export function applyEvent(prev: HandState, ev: GameEvent): HandState {
   const st = clone(prev);
-  if (ev.t !== 'dora' && ev.t !== 'deal' && ev.t !== 'wall') resolvePass(st);
+  if (ev.t !== 'dora' && ev.t !== 'deal' && ev.t !== 'wall' && ev.t !== 'reveal' && ev.t !== 'start') resolvePass(st);
   switch (ev.t) {
     case 'dora':
       st.doraIndicators.push(ev.tile);
@@ -113,12 +118,35 @@ export function applyEvent(prev: HandState, ev: GameEvent): HandState {
       }
       break;
     }
-    case 'draw': {
+    case 'start': {
+      if (st.phase !== 'setup') break;
+      // Play begins with whatever was entered; the rest of the hand is unknown.
+      st.phase = 'play';
+      st.unknown = Math.max(0, 13 - st.myHand.length);
+      st.turn = st.match.dealer;
+      st.stage = 'discard';
+      st.wall--; // dealer's first draw
+      if (st.turn === 0) st.unknown++; // my 14th tile as dealer was not entered
+      break;
+    }
+    case 'reveal': {
+      if (st.unknown <= 0) { st.warnings.push('No unknown tile to reveal'); break; }
+      st.unknown--;
+      st.myHand = sortTiles([...st.myHand, ev.tile]);
+      break;
+    }
+    case 'draw':
+    case 'drawUnknown': {
       if (st.turn !== 0 || st.stage !== 'draw') st.warnings.push('Draw recorded out of turn');
       st.turn = 0;
-      st.myHand.push(ev.tile);
-      st.myHand = sortTiles(st.myHand);
-      st.myDrawn = ev.tile;
+      if (ev.t === 'draw') {
+        st.myHand.push(ev.tile);
+        st.myHand = sortTiles(st.myHand);
+        st.myDrawn = ev.tile;
+      } else {
+        st.unknown++;
+        st.myDrawn = null;
+      }
       st.stage = 'discard';
       st.wall--;
       st.lastDrawRinshan = st.rinshanNext;
@@ -131,8 +159,9 @@ export function applyEvent(prev: HandState, ev: GameEvent): HandState {
       const p = st.players[ev.seat];
       if (ev.seat === 0) {
         const idx = st.myHand.indexOf(ev.tile);
-        if (idx < 0) { st.warnings.push('Discarded tile not in hand'); break; }
-        st.myHand.splice(idx, 1);
+        if (idx >= 0) st.myHand.splice(idx, 1);
+        else if (st.unknown > 0) st.unknown--; // discarded one of the tiles I had not entered
+        else { st.warnings.push('Discarded tile not in hand'); break; }
       } else if (st.turn !== ev.seat) {
         // Out-of-order opponent discard: accept it but realign the turn.
         st.warnings.push('Turn order adjusted');
@@ -215,8 +244,9 @@ export function applyEvent(prev: HandState, ev: GameEvent): HandState {
       const pl = st.players[ev.seat];
       if (ev.seat === 0) {
         const idx = st.myHand.indexOf(NORTH);
-        if (idx < 0) { st.warnings.push('No North in hand'); break; }
-        st.myHand.splice(idx, 1);
+        if (idx >= 0) st.myHand.splice(idx, 1);
+        else if (st.unknown > 0) st.unknown--;
+        else { st.warnings.push('No North in hand'); break; }
         st.myDrawn = null;
         st.stage = 'draw';
         st.rinshanNext = true;
@@ -268,6 +298,8 @@ export const describeEvent = (e: GameEvent): string => {
     case 'pon': case 'daiminkan': case 'kita': return `${e.t} ${e.seat}`;
     case 'ankan': case 'kakan': return `${e.t} ${e.seat}:${e.kind}`;
     case 'wall': return `wall ${e.delta}`;
+    case 'start': case 'drawUnknown': return e.t;
+    case 'reveal': return `reveal ${e.tile}`;
   }
 };
 
